@@ -1,15 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My First Server</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; }
-    h1 { color: #333; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Server - Home</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Welcome to My Server</h1>
-  <p>This page is being served by Node.js and Express.</p>
-  <p>I built this myself.</p>
+
+<header>
+    <nav>
+        <a href="/" class="logo">MyServer</a>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <h1>Bookmark Manager</h1>
+    <form id="bookmarkForm" class="bookmark-form">
+        <div class="form-group">
+            <label for="siteName">Site Name</label>
+            <input type="text" id="siteName" placeholder="Website Name" required>
+        </div>
+        <div class="form-group">
+            <label for="siteUrl">Site URL</label>
+            <input type="url" id="siteUrl" placeholder="Website URL (https://...)" required>
+        </div>
+        <button type="submit" class="btn">Add Bookmark</button>
+    </form>
+
+    <div id="bookmarksResults" class="bookmarks-list"></div>
+</main>
+
+<footer>
+    <p>&copy; 2026 MyServer. <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+</footer>
+
+<script src="script.js"></script>
 </body>
 </html>
