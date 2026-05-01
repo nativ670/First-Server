@@ -101,8 +101,20 @@ h1 {
     text-align: center;
 }
 
-.bookmark-form, .contact-form {
+.bookmark-form, .contact-form, .search-container {
     margin-bottom: 40px;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+    font-family: inherit;
+    box-shadow: 0 2px 5px var(--card-shadow);
 }
 
 .form-group {

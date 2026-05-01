@@ -88,6 +88,9 @@ function deleteBookmark(url) {
 
 // Fetch bookmarks
 function fetchBookmarks() {
+  // Get filter value
+  const filter = document.getElementById('searchFilter').value || '';
+  
   // Get bookmarks from localStorage
   const bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
   // Get output id
@@ -96,9 +99,13 @@ function fetchBookmarks() {
   // Build output
   bookmarksResults.innerHTML = '';
   if (bookmarks) {
-    for (let i = 0; i < bookmarks.length; i++) {
-      const name = bookmarks[i].name;
-      const url = bookmarks[i].url;
+    const filteredBookmarks = bookmarks.filter(bookmark => 
+      bookmark.name.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    for (let i = 0; i < filteredBookmarks.length; i++) {
+      const name = filteredBookmarks[i].name;
+      const url = filteredBookmarks[i].url;
 
       bookmarksResults.innerHTML += `
         <div class="bookmark-item">
@@ -112,6 +119,9 @@ function fetchBookmarks() {
     }
   }
 }
+
+// Search filter listener
+document.getElementById('searchFilter').addEventListener('input', fetchBookmarks);
 
 // Initial fetch
 fetchBookmarks();
