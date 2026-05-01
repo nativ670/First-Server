@@ -1,11 +1,14 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 const port = 3000;
 
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+const CONTACTS_FILE = path.join(__dirname, 'contacts.json');
 
 app.get('/about', (req, res) => {
   res.send('This is the about page. I built this server myself!');
@@ -32,15 +35,38 @@ app.post('/contact', (req, res) => {
   if (!message || message.trim() === '') errors.message = 'Message is required';
 
   if (Object.keys(errors).length > 0) {
-    // In a real app, you might re-render the form with error messages
-    // For now, we'll send a simple error response
     return res.status(400).send(`<h1>Validation Error</h1><ul>${Object.values(errors).map(err => `<li>${err}</li>`).join('')}</ul><a href="/contact">Go back</a>`);
   }
 
-  console.log(`Received contact form submission:`, { name, email, message });
+  const newContact = {
+    name,
+    email,
+    message,
+    timestamp: new Date().toISOString()
+  };
+
+  // Read existing contacts, or start with empty array
+  let contacts = [];
+  if (fs.existsSync(CONTACTS_FILE)) {
+    try {
+      const data = fs.readFileSync(CONTACTS_FILE, 'utf8');
+      contacts = JSON.parse(data);
+    } catch (err) {
+      console.error('Error reading contacts file:', err);
+    }
+  }
+
+  // Add new contact and save
+  contacts.push(newContact);
   
-  // Here you would normally save to a database or send an email
-  res.send(`<h1>Thank you, ${name}!</h1><p>Your message has been received.</p><a href="/">Go back home</a>`);
+  try {
+    fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2));
+    console.log(`Saved contact form submission from ${name}`);
+    res.send(`<h1>Thank you, ${name}!</h1><p>Your message has been received and saved.</p><a href="/">Go back home</a>`);
+  } catch (err) {
+    console.error('Error writing contacts file:', err);
+    res.status(500).send('<h1>Server Error</h1><p>Sorry, we could not save your message.</p><a href="/contact">Try again</a>');
+  }
 });
 
 app.get('/api/time', (req, res) => {
