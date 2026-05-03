@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "name": "Facebook",
+    "url": "https://www.facebook.com"
+  },
+  {
+    "name": "Amazon",
+    "url": "https://www.amazon.com"
+  }
+]
