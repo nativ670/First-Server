@@ -23,7 +23,7 @@ const validateBookmarkForm = () => {
 });
 
 // Save Bookmark
-function saveBookmark(e) {
+async function saveBookmark(e) {
   // Prevent form from submitting
   e.preventDefault();
 
@@ -41,82 +41,86 @@ function saveBookmark(e) {
     url: siteUrl
   };
 
-  // LocalStorage Test
-  if (localStorage.getItem('bookmarks') === null) {
-    // Init array
-    const bookmarks = [];
-    // Add to array
-    bookmarks.push(bookmark);
-    // Set to localStorage
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-  } else {
-    // Get bookmarks from localStorage
-    const bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
-    // Add bookmark to array
-    bookmarks.push(bookmark);
-    // Re-set back to localStorage
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+  try {
+    const response = await fetch('/api/bookmarks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(bookmark)
+    });
+
+    if (response.ok) {
+      // Clear form
+      document.getElementById('bookmarkForm').reset();
+      // Re-fetch bookmarks
+      fetchBookmarks();
+      // Reset validation state
+      validateBookmarkForm();
+    } else {
+      alert('Failed to save bookmark');
+    }
+  } catch (err) {
+    console.error('Error saving bookmark:', err);
+    alert('Server error while saving bookmark');
   }
-
-  // Clear form
-  document.getElementById('bookmarkForm').reset();
-
-  // Re-fetch bookmarks
-  fetchBookmarks();
-
-  // Reset validation state
-  validateBookmarkForm();
 }
 
 // Delete bookmark
-function deleteBookmark(url) {
-  // Get bookmarks from localStorage
-  const bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
-  // Loop through bookmarks
-  for (let i = 0; i < bookmarks.length; i++) {
-    if (bookmarks[i].url == url) {
-      // Remove from array
-      bookmarks.splice(i, 1);
-    }
-  }
-  // Re-set back to localStorage
-  localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+async function deleteBookmark(url) {
+  try {
+    const response = await fetch(`/api/bookmarks?url=${encodeURIComponent(url)}`, {
+      method: 'DELETE'
+    });
 
-  // Re-fetch bookmarks
-  fetchBookmarks();
+    if (response.ok) {
+      // Re-fetch bookmarks
+      fetchBookmarks();
+    } else {
+      alert('Failed to delete bookmark');
+    }
+  } catch (err) {
+    console.error('Error deleting bookmark:', err);
+    alert('Server error while deleting bookmark');
+  }
 }
 
 // Fetch bookmarks
-function fetchBookmarks() {
+async function fetchBookmarks() {
   // Get filter value
   const filter = document.getElementById('searchFilter').value || '';
   
-  // Get bookmarks from localStorage
-  const bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
-  // Get output id
-  const bookmarksResults = document.getElementById('bookmarksResults');
+  try {
+    const response = await fetch('/api/bookmarks');
+    const bookmarks = await response.json();
+    
+    // Get output id
+    const bookmarksResults = document.getElementById('bookmarksResults');
 
-  // Build output
-  bookmarksResults.innerHTML = '';
-  if (bookmarks) {
-    const filteredBookmarks = bookmarks.filter(bookmark => 
-      bookmark.name.toLowerCase().includes(filter.toLowerCase())
-    );
+    // Build output
+    bookmarksResults.innerHTML = '';
+    if (bookmarks && Array.isArray(bookmarks)) {
+      const filteredBookmarks = bookmarks.filter(bookmark => 
+        bookmark.name.toLowerCase().includes(filter.toLowerCase())
+      );
 
-    for (let i = 0; i < filteredBookmarks.length; i++) {
-      const name = filteredBookmarks[i].name;
-      const url = filteredBookmarks[i].url;
+      for (let i = 0; i < filteredBookmarks.length; i++) {
+        const name = filteredBookmarks[i].name;
+        const url = filteredBookmarks[i].url;
 
-      bookmarksResults.innerHTML += `
-        <div class="bookmark-item">
-          <h3>${name}</h3>
-          <div class="bookmark-actions">
-            <a class="btn btn-visit" target="_blank" href="${url}">Visit</a>
-            <button onclick="deleteBookmark('${url}')" class="btn btn-delete">Delete</button>
+        bookmarksResults.innerHTML += `
+          <div class="bookmark-item">
+            <h3>${name}</h3>
+            <div class="bookmark-actions">
+              <a class="btn btn-visit" target="_blank" href="${url}">Visit</a>
+              <button onclick="deleteBookmark('${url}')" class="btn btn-delete">Delete</button>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
     }
+  } catch (err) {
+    console.error('Error fetching bookmarks:', err);
   }
 }
 

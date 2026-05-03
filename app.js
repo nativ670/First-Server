@@ -9,6 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 const CONTACTS_FILE = path.join(__dirname, 'contacts.json');
+const BOOKMARKS_FILE = path.join(__dirname, 'bookmarks.json');
 
 app.get('/about', (req, res) => {
   res.send('This is the about page. I built this server myself!');
@@ -16,6 +17,76 @@ app.get('/about', (req, res) => {
 
 app.get('/contact', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'contact.html'));
+});
+
+// Bookmarks API
+app.get('/api/bookmarks', (req, res) => {
+  if (!fs.existsSync(BOOKMARKS_FILE)) {
+    return res.json([]);
+  }
+  try {
+    const data = fs.readFileSync(BOOKMARKS_FILE, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (err) {
+    console.error('Error reading bookmarks file:', err);
+    res.status(500).json({ error: 'Failed to read bookmarks' });
+  }
+});
+
+app.post('/api/bookmarks', (req, res) => {
+  const { name, url } = req.body;
+  if (!name || !url) {
+    return res.status(400).json({ error: 'Name and URL are required' });
+  }
+
+  let bookmarks = [];
+  if (fs.existsSync(BOOKMARKS_FILE)) {
+    try {
+      const data = fs.readFileSync(BOOKMARKS_FILE, 'utf8');
+      bookmarks = JSON.parse(data);
+    } catch (err) {
+      console.error('Error reading bookmarks file:', err);
+    }
+  }
+
+  const newBookmark = { name, url };
+  bookmarks.push(newBookmark);
+
+  try {
+    fs.writeFileSync(BOOKMARKS_FILE, JSON.stringify(bookmarks, null, 2));
+    res.status(201).json(newBookmark);
+  } catch (err) {
+    console.error('Error writing bookmarks file:', err);
+    res.status(500).json({ error: 'Failed to save bookmark' });
+  }
+});
+
+app.delete('/api/bookmarks', (req, res) => {
+  const { url } = req.query;
+  if (!url) {
+    return res.status(400).json({ error: 'URL is required' });
+  }
+
+  if (!fs.existsSync(BOOKMARKS_FILE)) {
+    return res.status(404).json({ error: 'No bookmarks found' });
+  }
+
+  try {
+    const data = fs.readFileSync(BOOKMARKS_FILE, 'utf8');
+    let bookmarks = JSON.parse(data);
+    const initialLength = bookmarks.length;
+    bookmarks = bookmarks.filter(b => b.url !== url);
+
+    if (bookmarks.length === initialLength) {
+      return res.status(404).json({ error: 'Bookmark not found' });
+    }
+
+    fs.writeFileSync(BOOKMARKS_FILE, JSON.stringify(bookmarks, null, 2));
+    res.json({ message: 'Bookmark deleted' });
+  } catch (err) {
+    console.error('Error processing delete:', err);
+    res.status(500).json({ error: 'Failed to delete bookmark' });
+  }
 });
 
 app.post('/contact', (req, res) => {
